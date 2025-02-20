@@ -1,0 +1,16 @@
+*.pyc
+.vscode
+output
+build
+tensorboard_3d
+screenshots
+data
+renderings
+saved
+slurm
+dgx
+locks
+scripts/output
+runs_train_py
+pose_pca/*
+experiments/*

@@ -1,0 +1,142 @@
+capture_id: "Actor02"
+smplx_dir: /media/wojciech/hdd/datasets/GAUSSIAN_GARMENT/body_models/
+assets: /media/wojciech/hdd/datasets/D3GA/actorshq/
+dataset_name: "actorshq"
+model_type: smplx
+is_smpl_body: true
+image_width: 747
+image_height: 1022
+primitive_type: cage
+
+data:
+  # ACTORSHQ dataset
+  image: /media/wojciech/hdd/datasets/ACTORSHQ/dataset/${capture_id}/{sequence}/4x/rgbs/{camera}/{camera}_rgb{frame:06d}.jpg
+  image_alpha: /media/wojciech/hdd/datasets/ACTORSHQ/dataset/${capture_id}/{sequence}/4x/masks/{camera}/{camera}_mask{frame:06d}.png
+  image_part_mask: ${assets}/${capture_id}/{sequence}/segmentations/{camera}/cloth_seg/{frame:06d}.png
+  # Our assets
+  smplx_poses: ${assets}/${capture_id}/{sequence}/smplx/
+  intrinsics: ${assets}/${capture_id}/{sequence}/intri.yml
+  extrinsics: ${assets}/${capture_id}/{sequence}/extri.yml
+  smplx_topology: ${smplx_dir}/SMPL_python_v.1.1.0/smplx/models/SMPLX_NEUTRAL.npz
+  smplx_model: ${smplx_dir}/SMPL_python_v.1.1.0/smplx/models/SMPLX_NEUTRAL.pkl
+  joint_regressor: ${smplx_dir}/SMPL_python_v.1.1.0/regressors/J_regressor_body25_smplx.txt
+  use_all_frames: false
+  n_testing_frames: 150
+  cameras: []
+
+### TRAIN CONFIG
+
+train:
+  tag: d3ga_default
+  run_dir: experiments/${.tag}/${capture_id}/clothed_multi/
+  ckpt_dir: ${.run_dir}/checkpoints
+  tb_dir: ${.run_dir}/tb
+  max_sh_degree: 3
+  use_shs: false
+  test_camera: "Cam127"
+  fps: 30
+  batch_size: 1
+  num_workers: 10
+  log_progress_n_steps: 5_000
+  log_n_steps: 50
+  checkpoint_n_steps: 20_000
+  erode_mask: false
+  close_holes: false
+  use_ao: false
+  use_gamma_space: false
+  use_color_calib: false
+  use_background: false
+  use_bg_network: false
+  use_blur: false
+  use_pixel_cal: false
+  use_face_rot: false
+  tet_offset_pre_lbs: true
+  use_opt_smplx: true
+  background: "white"
+  enable_vgg_from: 60_000
+  iterations: 400_000
+
+  optimizer:
+    class_name: torch.optim.Adam
+
+  lr_scheduler:
+    class_name: torch.optim.lr_scheduler.MultiStepLR
+    milestones: [200_000, 350_000, 500_000]
+    gamma: 0.33
+
+  # learning rates default
+  lr: 0.001
+  deform_mlp_lr: 0.0005
+  canon_mlp_lr: 0.0005
+  color_mlp_lr: 0.0005
+  face_mlp_lr: 0.0005
+  feature_lr: 0.001
+  rotation_lr: 0.001
+  scaling_lr: 0.001
+  opacity_lr: 0.001
+
+  # loss weights
+  lambda_dssim: 0.2
+  rgb_weight: 10.0
+  sil_weight: 0.5
+  shadow_weight: 4.0
+  fme_weight: 0.0025
+  vgg_weight: 0.15
+  blur_weight: 1.0e-05
+  bg_weight: 0.0
+
+bg_net:
+  W: 128
+  n_dims: 64
+
+frame_embedder:
+  n_dims: 32
+
+face_mlp:
+  n_layers: 3
+  n_nodes: 128
+  n_output: 128
+
+color_mlp:
+  n_layers: 4
+  n_nodes: 128
+  n_features: 64
+  use_pose: true
+  use_view_enc: true
+
+deform_mlp:
+  n_layers: 3
+  n_nodes: 128
+  scale: 0.2
+
+canon_mlp:
+  n_layers: 3
+  n_nodes: 128
+  scale_bary: 0.25
+  scale_rot: 0.25
+  scale_scale: 0.25
+
+shadow_mlp:
+  n_layers: 3
+  n_nodes: 128
+
+cages:
+  body:
+    label_id: [-1]
+    inflate: 0.01
+    n_target_tris: 10_000
+    n_gaussians: 35_000
+    node_scale: 0.07
+    color: "blue"
+  upper:
+    label_id: [1]
+    inflate: 0.03
+    n_target_tris: 15_000
+    n_gaussians: 50_000
+    color: "red"
+  lower:
+    label_id: [2]
+    inflate: 0.03
+    n_target_tris: 15_000
+    n_gaussians: 50_000
+    color: "green"
